@@ -131,7 +131,7 @@ class LoadOutlookContacts(Service):
 
 
   def refreshMicrosoftAccessToken(self, refreshToken):
-    # Khai báo kết nối tới api trao đổi token của google
+    # Khai báo kết nối tới api trao đổi token của microsoft
     exchange_token_conn = self.outgoing.plain_http['Exchange Microsoft Token'].conn
 
     params = {
