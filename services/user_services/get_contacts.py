@@ -3,14 +3,15 @@
 
 from json import dumps, loads
 from bson import json_util
+import pytz
 from models import *
 # các model User, GoogleAccount, OutlookAccount, Contact, SyncContacts
 from zato.server.service import Service
 
 
-class GetGoogleContacts(Service):
+class GetUserSyncContacts(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      lấy thông tin danh bạ google qua api từ tài khoản liên kết của user
+      lấy thông tin danh bạ đã được đồng bộ qua api từ tài khoản liên kết của user
   """
 
   class SimpleIO:
@@ -46,9 +47,9 @@ class GetGoogleContacts(Service):
     ##############################################################################################
     
     user = User.objects(user_id = userId)[0]
-    googleAccount = user.google # object của model GoogleAccount
+    syncContacts = user.sync_contacts # object của model SyncContacts
 
-    googleContacts = [
+    userContacts = [
       {
         'phoneName': contact.phone_name,
         'phoneNumbers': [
@@ -56,8 +57,15 @@ class GetGoogleContacts(Service):
           for phoneNumber in contact.phone_numbers
         ]
       }
-      for contact in googleAccount.contacts
+      for contact in syncContacts.contacts
     ]
+
+    vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+
+    syncAt = pytz.utc.localize(syncContacts.sync_at).astimezone(vietnam_tz)
     
-    response.payload = dumps(googleContacts)
+    response.payload = {
+      'syncAt': dumps(syncAt, default=str),
+      'contacts': userContacts
+    }
     response.status_code = 200

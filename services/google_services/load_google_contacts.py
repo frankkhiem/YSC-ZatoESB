@@ -14,7 +14,7 @@ class LoadGoogleContacts(Service):
   """
 
   class SimpleIO:
-    input = 'accessToken'
+    input_required = 'accessToken'
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -106,7 +106,7 @@ class LoadGoogleContacts(Service):
   ############################################
 
   def loadContacts(self, accessToken):
-    load_contacts_conn = self.out.rest['Load Google Contacts'].conn
+    load_contacts_conn = self.outgoing.plain_http['Load Google Contacts'].conn
 
     params = {
       'personFields': 'names,phoneNumbers'
@@ -125,13 +125,13 @@ class LoadGoogleContacts(Service):
 
     return {
       'status_code': res_load_contacts.status_code,
-      'data': res_load_contacts.data
+      'data': res_load_contacts.json()
     }
 
 
   def refreshGoogleAccessToken(self, refreshToken):
     # Khai báo kết nối tới api trao đổi token của google
-    exchange_token_conn = self.out.rest['Exchange Google Token'].conn
+    exchange_token_conn = self.outgoing.plain_http['Exchange Google Token'].conn
 
     params = {
       # Không có params

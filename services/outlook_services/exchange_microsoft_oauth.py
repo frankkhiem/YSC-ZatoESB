@@ -15,7 +15,7 @@ class ExchangeMicrosoftToken(Service):
   """
 
   class SimpleIO:
-    input = 'accessToken', 'authorization_code'
+    input_required = 'accessToken', 'authorization_code'
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -54,7 +54,7 @@ class ExchangeMicrosoftToken(Service):
     authorization_code = request['authorization_code']
 
     # Khai báo kết nối tới api trao đổi token của google
-    exchange_token_conn = self.out.rest['Exchange Microsoft Token'].conn
+    exchange_token_conn = self.outgoing.plain_http['Exchange Microsoft Token'].conn
 
     params = {
       # Không có params

@@ -12,7 +12,7 @@ class AuthMiddleware(Service):
   """
 
   class SimpleIO:
-    input = 'accessToken'
+    input_required = 'accessToken'
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -20,9 +20,9 @@ class AuthMiddleware(Service):
     response = self.response
 
     accessToken = request['accessToken']
-
+    
     # Khai báo kết nối tới api xác thực người dùng từ accessToken của firebase
-    auth_conn = self.out.rest['Auth Firebase By AccessToken'].conn
+    auth_conn = self.outgoing.plain_http['Auth Firebase By AccessToken'].conn
 
     params = {
       'key': 'AIzaSyAq62TOWEIlcCPx6MGslvg8ao33s9v9WLE'

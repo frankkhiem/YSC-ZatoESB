@@ -4,7 +4,7 @@
 from json import dumps, loads
 from models import *
 # các model User, GoogleAccount, Contact
-from zato.server.service import Service
+from zato.server.service import Service, AsIs
 
 
 class Login(Service):
@@ -12,7 +12,7 @@ class Login(Service):
   """
 
   class SimpleIO:
-    input = 'email', 'password'
+    input_required = 'email', AsIs('password')
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -23,7 +23,7 @@ class Login(Service):
     password = request['password']
 
     # Khai báo kết nối tới api đăng nhập firebase
-    login_conn = self.out.rest['Login Firebase'].conn
+    login_conn = self.outgoing.plain_http['Login Firebase'].conn
 
     params = {
       'key': 'AIzaSyAq62TOWEIlcCPx6MGslvg8ao33s9v9WLE'

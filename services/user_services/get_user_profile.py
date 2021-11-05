@@ -13,7 +13,7 @@ class GetUserProfile(Service):
   """
 
   class SimpleIO:
-    input = 'accessToken'
+    input_required = 'accessToken'
 
   def handle(self):
     # Khai báo đối tượng request và response của service

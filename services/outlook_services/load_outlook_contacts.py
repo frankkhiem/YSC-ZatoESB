@@ -14,7 +14,7 @@ class LoadOutlookContacts(Service):
   """
 
   class SimpleIO:
-    input = 'accessToken'
+    input_required = 'accessToken'
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -46,7 +46,7 @@ class LoadOutlookContacts(Service):
     ##############################################################################################
     
     user = User.objects(user_id = userId)[0]
-    outlookAccount = user.outlook # object của model GoogleAccount
+    outlookAccount = user.outlook # object của model OutlookAccount
 
     if not outlookAccount.activated :
       response.payload = {
@@ -64,7 +64,7 @@ class LoadOutlookContacts(Service):
       user.save()
       response.payload = {
         'success': True,
-        'message': 'Load and save Outlook contacts successfully'
+        'message': 'Load and save Outlook contacts successfully',
       }
       response.status_code = 200
       return
@@ -72,26 +72,26 @@ class LoadOutlookContacts(Service):
     elif res_load_contacts['status_code'] == 401 :
       result = self.refreshMicrosoftAccessToken(outlookAccount.refresh_token)
       if result['status'] :
-        googleAccount.access_token = result['access_token']       
-        res_load_contacts = self.loadContacts(googleAccount.access_token)
-        listContacts = res_load_contacts['data']['connections']
-        googleAccount.contacts = self.saveContacts(listContacts)
+        outlookAccount.access_token = result['access_token']       
+        res_load_contacts = self.loadContacts(outlookAccount.access_token)
+        listContacts = res_load_contacts['data']['value']
+        outlookAccount.contacts = self.saveContacts(listContacts)
         user.save()
         response.payload = {
           'success': True,
-          'message': 'Load and save Google contacts successfully'
+          'message': 'Load and save Outlook contacts successfully'
         }
         response.status_code = 200
         return
 
       else :
-        googleAccount.activated = False
-        googleAccount.access_token = None
-        googleAccount.refresh_token = None
+        outlookAccount.activated = False
+        outlookAccount.access_token = None
+        outlookAccount.refresh_token = None
         user.save()
         response.payload = {
           'success': False,
-          'message': 'Google account not linked'
+          'message': 'Outlook account not linked'
         }
         response.status_code = 400
         return
@@ -106,7 +106,7 @@ class LoadOutlookContacts(Service):
   ############################################
 
   def loadContacts(self, accessToken):
-    load_contacts_conn = self.out.rest['Load Outlook Contacts'].conn
+    load_contacts_conn = self.outgoing.plain_http['Load Outlook Contacts'].conn
 
     params = {
       # Không có params
@@ -120,31 +120,33 @@ class LoadOutlookContacts(Service):
       'Content-Type': 'application/json',
       'Authorization': microsoftToken
     }
-    # Gửi get request lấy danh bạ google
+    # Gửi get request lấy danh bạ outlook
     res_load_contacts = load_contacts_conn.get(self.cid, params, headers=headers)
     # self.logger.info(type(res_load_contacts.data['value']))
 
     return {
       'status_code': res_load_contacts.status_code,
-      'data': res_load_contacts.data
+      'data': res_load_contacts.json()
     }
 
 
   def refreshMicrosoftAccessToken(self, refreshToken):
     # Khai báo kết nối tới api trao đổi token của google
-    exchange_token_conn = self.out.rest['Exchange Google Token'].conn
+    exchange_token_conn = self.outgoing.plain_http['Exchange Microsoft Token'].conn
 
     params = {
       # Không có params
     }
     payload = {
-      'client_id': '301608552892-g7inqpodo0dkvlvkmnaqrmpgf8oi695d.apps.googleusercontent.com',
-      'client_secret': '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',
       'refresh_token': refreshToken,
-      'grant_type': 'refresh_token'
+      'client_id': 'e63fb652-b80d-439f-a487-87dc8ea3bd7b',
+      'client_secret': 'ulP7Q~SLIVe3mOgL37e2pROBYusN2CxZehTsK',
+      'redirect_uri': 'http://localhost:3000/google-callback',
+      'grant_type': 'refresh_token',
+      'scope': 'Contacts.Read Contacts.ReadWrite'
     }
     headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded'
     }
 
     res_exchange_token = exchange_token_conn.post(self.cid, payload, params, headers=headers)
@@ -157,7 +159,7 @@ class LoadOutlookContacts(Service):
     if res_exchange_token.status_code == 200 :
       return {
         'status': True,
-        'access_token': res_exchange_token.data['access_token']
+        'access_token': res_exchange_token.json()['access_token']
       }
     else :
       return {

@@ -8,9 +8,9 @@ from models import *
 from zato.server.service import Service
 
 
-class GetGoogleContacts(Service):
+class GetOutlookContacts(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      lấy thông tin danh bạ google qua api từ tài khoản liên kết của user
+      lấy thông tin danh bạ outlook qua api từ tài khoản liên kết của user
   """
 
   class SimpleIO:
@@ -46,9 +46,9 @@ class GetGoogleContacts(Service):
     ##############################################################################################
     
     user = User.objects(user_id = userId)[0]
-    googleAccount = user.google # object của model GoogleAccount
+    outlookAccount = user.outlook # object của model OutlookAccount
 
-    googleContacts = [
+    outlookContacts = [
       {
         'phoneName': contact.phone_name,
         'phoneNumbers': [
@@ -56,8 +56,8 @@ class GetGoogleContacts(Service):
           for phoneNumber in contact.phone_numbers
         ]
       }
-      for contact in googleAccount.contacts
+      for contact in outlookAccount.contacts
     ]
     
-    response.payload = dumps(googleContacts)
+    response.payload = dumps(outlookContacts)
     response.status_code = 200
