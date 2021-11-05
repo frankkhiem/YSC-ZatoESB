@@ -159,7 +159,7 @@ class LoadOutlookContacts(Service):
     if res_exchange_token.status_code == 200 :
       return {
         'status': True,
-        'access_token': res_exchange_token.data['access_token']
+        'access_token': res_exchange_token.json()['access_token']
       }
     else :
       return {

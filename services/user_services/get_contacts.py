@@ -48,7 +48,7 @@ class GetUserSyncContacts(Service):
     
     user = User.objects(user_id = userId)[0]
     syncContacts = user.sync_contacts # object của model SyncContacts
-
+    
     userContacts = [
       {
         'phoneName': contact.phone_name,

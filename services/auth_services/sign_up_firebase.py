@@ -4,7 +4,7 @@
 from json import dumps, loads
 from models import *
 # các model User, GoogleAccount, Contact
-from zato.server.service import Service
+from zato.server.service import Service, AsIs
 
 
 class SignUpFirebase(Service):
@@ -12,7 +12,7 @@ class SignUpFirebase(Service):
   """
 
   class SimpleIO:
-    input = 'username', 'email', 'password'
+    input = 'username', 'email', AsIs('password')
     # output = 'username', 'email', 'password'
 
   def handle(self):

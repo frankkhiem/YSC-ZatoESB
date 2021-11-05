@@ -4,7 +4,7 @@
 from json import dumps, loads
 from models import *
 # các model User, GoogleAccount, Contact
-from zato.server.service import Service
+from zato.server.service import Service, AsIs
 
 
 class Login(Service):
@@ -12,7 +12,7 @@ class Login(Service):
   """
 
   class SimpleIO:
-    input = 'email', 'password'
+    input = 'email', AsIs('password')
 
   def handle(self):
     # Khai báo đối tượng request và response của service
