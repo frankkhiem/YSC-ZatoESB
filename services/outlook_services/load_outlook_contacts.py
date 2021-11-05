@@ -64,7 +64,7 @@ class LoadOutlookContacts(Service):
       user.save()
       response.payload = {
         'success': True,
-        'message': 'Load and save Outlook contacts successfully'
+        'message': 'Load and save Outlook contacts successfully' 
       }
       response.status_code = 200
       return
@@ -132,19 +132,21 @@ class LoadOutlookContacts(Service):
 
   def refreshMicrosoftAccessToken(self, refreshToken):
     # Khai báo kết nối tới api trao đổi token của google
-    exchange_token_conn = self.out.rest['Exchange Google Token'].conn
+    exchange_token_conn = self.out.rest['Exchange Microsoft Token'].conn
 
     params = {
       # Không có params
     }
     payload = {
-      'client_id': '301608552892-g7inqpodo0dkvlvkmnaqrmpgf8oi695d.apps.googleusercontent.com',
-      'client_secret': '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',
       'refresh_token': refreshToken,
-      'grant_type': 'refresh_token'
+      'client_id': 'e63fb652-b80d-439f-a487-87dc8ea3bd7b',
+      'client_secret': 'ulP7Q~SLIVe3mOgL37e2pROBYusN2CxZehTsK',
+      'redirect_uri': 'http://localhost:3000/google-callback',
+      'grant_type': 'refresh_token',
+      'scope': 'Contacts.Read Contacts.ReadWrite'
     }
     headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded'
     }
 
     res_exchange_token = exchange_token_conn.post(self.cid, payload, params, headers=headers)
