@@ -52,5 +52,9 @@ class Login(Service):
         'message': res_login.data['error']['message']
       }
       response.status_code = res_login.status_code
+    
+    response.headers = {
+      'Access-Control-Allow-Origin' : '*',
+    }
 
     return
