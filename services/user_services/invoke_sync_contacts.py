@@ -3,14 +3,15 @@
 
 from json import dumps, loads
 from bson import json_util
+import pytz
 from models import *
 # các model User, GoogleAccount, OutlookAccount, Contact, SyncContacts
 from zato.server.service import Service
 
 
-class GetOutlookContacts(Service):
+class InvokeSyncContacts(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      lấy danh bạ outlook của user
+      gọi sync_contacts service đồng bộ danh bạ, trả về danh bạ đã được đồng bộ
   """
 
   class SimpleIO:
@@ -48,11 +49,15 @@ class GetOutlookContacts(Service):
       # userId nhận được dùng để query dữ liệu tương ứng với người dùng request đến
       userId = res_auth['userId']
     ##############################################################################################
-    
-    user = User.objects(user_id = userId)[0]
-    outlookAccount = user.outlook # object của model OutlookAccount
 
-    outlookContacts = [
+    self.invoke('sync-contacts.sync-contacts', {
+      'userId': userId
+    })
+
+    user = User.objects(user_id = userId)[0]
+    syncContacts = user.sync_contacts # object của model SyncContacts
+    
+    userContacts = [
       {
         'phoneName': contact.phone_name,
         'phoneNumbers': [
@@ -60,10 +65,17 @@ class GetOutlookContacts(Service):
           for phoneNumber in contact.phone_numbers
         ]
       }
-      for contact in outlookAccount.contacts
+      for contact in syncContacts.contacts
     ]
 
-    outlookContacts.sort(key = lambda x: x['phoneName'])
+    userContacts.sort(key = lambda x: x['phoneName'])
+
+    vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+
+    syncAt = pytz.utc.localize(syncContacts.sync_at).astimezone(vietnam_tz)
     
-    response.payload = dumps(outlookContacts)
+    response.payload = {
+      'syncAt': dumps(syncAt, default=str),
+      'contacts': userContacts
+    }
     response.status_code = 200

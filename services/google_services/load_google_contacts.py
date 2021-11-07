@@ -20,6 +20,10 @@ class LoadGoogleContacts(Service):
     # Khai báo đối tượng request và response của service
     request = self.request.input
     response = self.response
+    # Set headers tránh lỗi CORS
+    response.headers = {
+      'Access-Control-Allow-Origin' : '*',
+    }
 
     ##############################################################################################
     # Mọi service cần xác thực người dùng và lấy thông tin của người đều cần các dòng trong vùng #

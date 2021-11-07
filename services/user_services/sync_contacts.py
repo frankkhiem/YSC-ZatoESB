@@ -10,7 +10,7 @@ from zato.server.service import Service
 
 
 class SyncContacts(Service):
-  """ Nhận request gồm userId lấy user tương ứng, 
+  """ Nhận input gồm userId lấy user tương ứng, 
       đồng bộ 2 tập danh bạ google và outlook vào trong sync_contacts
   """
 
