@@ -68,10 +68,13 @@ class GetUserSyncContacts(Service):
 
     vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
 
-    syncAt = pytz.utc.localize(syncContacts.sync_at).astimezone(vietnam_tz)
+    if syncContacts.sync_at is None :
+      syncAt = None
+    else :
+      syncAt = dumps(pytz.utc.localize(syncContacts.sync_at).astimezone(vietnam_tz), default=str)
     
     response.payload = {
-      'syncAt': dumps(syncAt, default=str),
+      'syncAt': syncAt,
       'contacts': userContacts
     }
     response.status_code = 200

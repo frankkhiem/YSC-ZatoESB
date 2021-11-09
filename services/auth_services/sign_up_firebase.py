@@ -19,6 +19,10 @@ class SignUpFirebase(Service):
     # Khai báo đối tượng request và response của service
     request = self.request.input
     response = self.response
+    # Set headers tránh lỗi CORS
+    response.headers = {
+      'Access-Control-Allow-Origin' : '*',
+    }
 
     email = request['email']
     password = request['password']
