@@ -21,6 +21,10 @@ class ExchangeMicrosoftToken(Service):
     # Khai báo đối tượng request và response của service
     request = self.request.input
     response = self.response
+    # Set headers tránh lỗi CORS
+    response.headers = {
+      'Access-Control-Allow-Origin' : '*',
+    }
 
     ##############################################################################################
     # Mọi service cần xác thực người dùng và lấy thông tin của người đều cần các dòng trong vùng #
@@ -63,7 +67,7 @@ class ExchangeMicrosoftToken(Service):
       'code': authorization_code,
       'client_id': 'e63fb652-b80d-439f-a487-87dc8ea3bd7b',
       'client_secret': 'ulP7Q~SLIVe3mOgL37e2pROBYusN2CxZehTsK',
-      'redirect_uri': 'http://localhost:3000/google-callback',
+      'redirect_uri': 'http://localhost:8080/outlook/get-auth-code',
       'grant_type': 'authorization_code',
       'scope': 'Contacts.Read Contacts.ReadWrite'
     }

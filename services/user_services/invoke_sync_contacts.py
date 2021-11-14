@@ -9,9 +9,9 @@ from models import *
 from zato.server.service import Service
 
 
-class GetUserSyncContacts(Service):
+class InvokeSyncContacts(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      lấy thông tin danh bạ đã được đồng bộ qua api từ tài khoản liên kết của user
+      gọi sync_contacts service đồng bộ danh bạ, trả về danh bạ đã được đồng bộ
   """
 
   class SimpleIO:
@@ -49,10 +49,14 @@ class GetUserSyncContacts(Service):
       # userId nhận được dùng để query dữ liệu tương ứng với người dùng request đến
       userId = res_auth['userId']
     ##############################################################################################
-    
+
+    self.invoke('sync-contacts.sync-contacts', {
+      'userId': userId
+    })
+
     user = User.objects(user_id = userId)[0]
     syncContacts = user.sync_contacts # object của model SyncContacts
-
+    
     userContacts = [
       {
         'phoneName': contact.phone_name,
@@ -68,13 +72,10 @@ class GetUserSyncContacts(Service):
 
     vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
 
-    if syncContacts.sync_at is None :
-      syncAt = None
-    else :
-      syncAt = dumps(pytz.utc.localize(syncContacts.sync_at).astimezone(vietnam_tz), default=str)
+    syncAt = pytz.utc.localize(syncContacts.sync_at).astimezone(vietnam_tz)
     
     response.payload = {
-      'syncAt': syncAt,
+      'syncAt': dumps(syncAt, default=str),
       'contacts': userContacts
     }
     response.status_code = 200

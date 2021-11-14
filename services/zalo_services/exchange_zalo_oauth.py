@@ -3,19 +3,19 @@
 
 from json import dumps, loads
 from bson import json_util
-import pytz
 from models import *
 # các model User, GoogleAccount, OutlookAccount, Contact, SyncContacts
 from zato.server.service import Service
 
 
-class GetUserSyncContacts(Service):
+class ExchangeZaloToken(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      lấy thông tin danh bạ đã được đồng bộ qua api từ tài khoản liên kết của user
+      authorization_code từ tài khoản Zalo của người dùng để trao đổi accessToken, refreshToken 
+      truy cập tới API Zalo tương ứng với người dùng
   """
 
   class SimpleIO:
-    input_required = 'accessToken'
+    input_required = 'accessToken', 'authorization_code'
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -51,30 +51,44 @@ class GetUserSyncContacts(Service):
     ##############################################################################################
     
     user = User.objects(user_id = userId)[0]
-    syncContacts = user.sync_contacts # object của model SyncContacts
+    zaloAccount = user.zalo # object của model GoogleAccount
 
-    userContacts = [
-      {
-        'phoneName': contact.phone_name,
-        'phoneNumbers': [
-          phoneNumber
-          for phoneNumber in contact.phone_numbers
-        ]
-      }
-      for contact in syncContacts.contacts
-    ]
 
-    userContacts.sort(key = lambda x: x['phoneName'])
+    # auth code google người dùng gửi lên
+    authorization_code = request['authorization_code']
 
-    vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    # Khai báo kết nối tới api trao đổi token của google
+    exchange_token_conn = self.outgoing.plain_http['Exchange Zalo Token'].conn
 
-    if syncContacts.sync_at is None :
-      syncAt = None
-    else :
-      syncAt = dumps(pytz.utc.localize(syncContacts.sync_at).astimezone(vietnam_tz), default=str)
-    
-    response.payload = {
-      'syncAt': syncAt,
-      'contacts': userContacts
+    params = {
+      # Không có params
     }
-    response.status_code = 200
+    payload = {
+      'code': authorization_code,
+      'app_id': 2399654782955708252,
+      'grant_type': 'authorization_code',
+    }
+    headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'secret_key': '9K1qBjgT6BHTZpQ9SwoI'
+    }
+
+    res_exchange_token = exchange_token_conn.post(self.cid, payload, params, headers=headers)
+
+    # self.logger.info(res_exchange_token.json())
+
+    if 'access_token' in res_exchange_token.json() and 'refresh_token' in res_exchange_token.json():
+      zaloAccount.access_token = res_exchange_token.json()['access_token']
+      zaloAccount.refresh_token = res_exchange_token.json()['refresh_token']
+      zaloAccount.activated = True
+      user.save()
+      response.payload = {
+        'message': 'Exchange Zalo token successfully'
+      }
+      response.status_code = 200
+      return
+
+    response.payload = {
+      'message': 'Exchange Zalo token failed'
+    }
+    response.status_code = 400

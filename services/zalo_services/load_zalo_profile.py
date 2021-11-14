@@ -8,9 +8,9 @@ from models import *
 from zato.server.service import Service
 
 
-class LoadGoogleContacts(Service):
+class LoadZaloProfile(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      lấy thông tin danh bạ google qua api từ tài khoản liên kết của user
+      lấy thông tin tài khoản zalo qua api từ tài khoản liên kết của user
   """
 
   class SimpleIO:
@@ -50,52 +50,61 @@ class LoadGoogleContacts(Service):
     ##############################################################################################
     
     user = User.objects(user_id = userId)[0]
-    googleAccount = user.google # object của model GoogleAccount
+    zaloAccount = user.zalo # object của model ZaloAccount
 
-    if not googleAccount.activated :
+    if not zaloAccount.activated :
       response.payload = {
         'success': False,
-        'message': 'Google account not linked'
+        'message': 'Zalo account not linked'
       }
       response.status_code = 400
       return
 
-    res_load_contacts = self.loadContacts(googleAccount.access_token)
+    res_load_profile = self.loadProfile(zaloAccount.access_token)
 
-    if res_load_contacts['status_code'] == 200 :
-      listContacts =  res_load_contacts['data']['connections']
-      googleAccount.contacts = self.saveContacts(listContacts)
+    if res_load_profile['data']['error'] == 0 :
+      accountName = res_load_profile['data']['name']
+      accountAvatar = res_load_profile['data']['picture']['data']['url']
+      zaloAccount.account_name = accountName
+      zaloAccount.account_avatar = accountAvatar
       user.save()
       response.payload = {
         'success': True,
-        'message': 'Load and save Google contacts successfully'
+        'zaloName': accountName,
+        'zaloAvatar': accountAvatar
       }
       response.status_code = 200
       return
 
-    elif res_load_contacts['status_code'] == 401 :
-      result = self.refreshGoogleAccessToken(googleAccount.refresh_token)
+    elif res_load_profile['data']['error'] != 0 :
+      result = self.refreshZaloAccessToken(zaloAccount.refresh_token)
       if result['status'] :
-        googleAccount.access_token = result['access_token']       
-        res_load_contacts = self.loadContacts(googleAccount.access_token)
-        listContacts = res_load_contacts['data']['connections']
-        googleAccount.contacts = self.saveContacts(listContacts)
+        zaloAccount.access_token = result['access_token'] 
+        zaloAccount.refresh_token = result['refresh_token']      
+        res_load_profile = self.loadProfile(zaloAccount.access_token)
+        accountName = res_load_profile['data']['name']
+        accountAvatar = res_load_profile['data']['picture']['data']['url']
+        zaloAccount.account_name = accountName
+        zaloAccount.account_avatar = accountAvatar
         user.save()
         response.payload = {
           'success': True,
-          'message': 'Load and save Google contacts successfully'
+          'zaloName': accountName,
+          'zaloAvatar': accountAvatar
         }
         response.status_code = 200
         return
 
       else :
-        googleAccount.activated = False
-        googleAccount.access_token = None
-        googleAccount.refresh_token = None
+        zaloAccount.activated = False
+        zaloAccount.access_token = None
+        zaloAccount.refresh_token = None
+        zaloAccount.account_name = None
+        zaloAccount.account_avatar= None
         user.save()
         response.payload = {
           'success': False,
-          'message': 'Google account not linked'
+          'message': 'Zalo account not linked'
         }
         response.status_code = 400
         return
@@ -109,22 +118,21 @@ class LoadGoogleContacts(Service):
 
   ############################################
 
-  def loadContacts(self, accessToken):
-    load_contacts_conn = self.outgoing.plain_http['Load Google Contacts'].conn
+  def loadProfile(self, accessToken):
+    load_contacts_conn = self.outgoing.plain_http['Load Zalo Profile'].conn
 
     params = {
-      'personFields': 'names,phoneNumbers'
+      'fields': 'name, picture'
     }
     payload = {
       # Không có payload trong body
     }
 
-    googleToken = 'Bearer ' + accessToken
     headers = {
-      'Content-Type': 'application/json',
-      'Authorization': googleToken
+      'Content-Type': 'application/json;charset=utf-8',
+      'access_token': accessToken
     }
-    # Gửi get request lấy danh bạ google
+    # Gửi get request lấy hồ sơ zalo
     res_load_contacts = load_contacts_conn.get(self.cid, params, headers=headers)
 
     return {
@@ -133,21 +141,21 @@ class LoadGoogleContacts(Service):
     }
 
 
-  def refreshGoogleAccessToken(self, refreshToken):
+  def refreshZaloAccessToken(self, refreshToken):
     # Khai báo kết nối tới api trao đổi token của google
-    exchange_token_conn = self.outgoing.plain_http['Exchange Google Token'].conn
+    exchange_token_conn = self.outgoing.plain_http['Exchange Zalo Token'].conn
 
     params = {
       # Không có params
     }
     payload = {
-      'client_id': '301608552892-g7inqpodo0dkvlvkmnaqrmpgf8oi695d.apps.googleusercontent.com',
-      'client_secret': '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',
+      'app_id': '2399654782955708252',
       'refresh_token': refreshToken,
       'grant_type': 'refresh_token'
     }
     headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'secret_key': '9K1qBjgT6BHTZpQ9SwoI'
     }
 
     res_exchange_token = exchange_token_conn.post(self.cid, payload, params, headers=headers)
@@ -157,25 +165,13 @@ class LoadGoogleContacts(Service):
     
     self.logger.info('Goi den refresh roi ...............!')
 
-    if res_exchange_token.status_code == 200 :
+    if 'access_token' in res_exchange_token.json() and 'refresh_token' in res_exchange_token.json():
       return {
         'status': True,
-        'access_token': res_exchange_token.data['access_token']
+        'access_token': res_exchange_token.json()['access_token'],
+        'refresh_token': res_exchange_token.json()['refresh_token']
       }
     else :
       return {
         'status': False
       }
-    
-  
-  def saveContacts(self, dataContacts):
-    contacts = []
-    for item in dataContacts :
-      phoneName = item['names'][0]['displayName']
-      phoneNumbers = []
-      for phoneNumber in item['phoneNumbers'] :
-        phoneNumbers.append(phoneNumber['value'])
-      contact = Contact(phone_name=phoneName, phone_numbers=phoneNumbers)
-      contacts.append(contact)
-    
-    return contacts
