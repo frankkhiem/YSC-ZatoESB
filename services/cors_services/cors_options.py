@@ -10,5 +10,6 @@ class ConfiguringCORS(Service):
   def handle_OPTIONS(self):
     self.response.headers = {
       'Access-Control-Allow-Origin' : '*',
-      'Access-Control-Allow-Headers': '*'
+      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Allow-Methods': '*'
     }

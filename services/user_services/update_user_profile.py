@@ -9,13 +9,15 @@ from models import *
 from zato.server.service import Service
 
 
-class GetUserProfile(Service):
+class UpdateUserProfile(Service):
   """ Nhận request gồm accessToken trả về thông tin user
   """
 
   class SimpleIO:
     input_required = 'accessToken'
-
+    input_optional = 'userName', 'birthday', 'avatar', 'aboutMe'
+    default_value = None
+ 
   def handle(self):
     # Khai báo đối tượng request và response của service
     request = self.request.input
@@ -53,24 +55,32 @@ class GetUserProfile(Service):
     # user = User.objects.get(user_id = userId).to_mongo().to_dict() # Convert từ QuerySet sang Dict
     user = User.objects.get(user_id = userId) # Đây là object thuộc class QuerySet
 
-    if user['birthday'] is not None :
-      birthday = datetime.strftime(user['birthday'], '%Y-%m-%d')
+    if request['userName'] is None :
+      name = 'Guest'
+    else :
+      name = request['userName']
+
+    if request['birthday'] is not None :
+      try :
+        birthday = datetime.strptime(request['birthday'], '%Y-%m-%d')
+      except :
+        birthday = None
     else :
       birthday = None
 
-    # response.payload = loads(json_util.dumps(user)) # Khắc phục lỗi convert ObjectId của mongo sang json
-    response.payload = {
-      'userId': user['user_id'],
-      'userName': user['user_name'],
-      'email': user['email'],
+    fields = {
+      'user_name': name,
       'birthday': birthday,
-      'avatar': user['avatar'],
-      'aboutMe': user['about_me'],
-      'linkedGoogle': user['google']['activated'],
-      'linkedOutlook': user['outlook']['activated'],
-      'linkedZalo': user['zalo']['activated']
+      'avatar': request['avatar'],
+      'about_me': request['aboutMe']
     }
 
-    response.status_code = 200
+    user.update(**fields)
 
+    response.payload = {
+      'success': True,
+      'message': 'Update profile successfully'
+    }
+
+    response.status_code = 200 
     return
