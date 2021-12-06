@@ -28,12 +28,53 @@ class SyncContacts(Service):
 
     syncContacts = user.sync_contacts # object của model SyncContacts
 
-    googleContacts = user.google.contacts
+    if user.google.contacts is not None :
+      googleContacts = user.google.contacts
 
-    outlookContacts = user.outlook.contacts
+    if user.outlook.contacts is not None :
+      outlookContacts = user.outlook.contacts
 
-    # List lưu danh bạ sau khi tiến hành đồng bộ
-    syncContacts.contacts = googleContacts + outlookContacts
+    self.logger.info(len(syncContacts.contacts))
+    self.logger.info(len(googleContacts))
+    self.logger.info(len(outlookContacts))
+
+    # Lọc các danh bạ trùng trên trong list danh bạ
+    index = 0
+    while index < len(syncContacts.contacts) :
+      subIndex = index + 1
+      while subIndex < len(syncContacts.contacts) :
+        if syncContacts.contacts[subIndex].phone_name == syncContacts.contacts[index].phone_name :
+          for phoneNumber in syncContacts.contacts[subIndex].phone_numbers :
+            if phoneNumber not in syncContacts.contacts[index].phone_numbers :
+              syncContacts.contacts[index].phone_numbers.append((phoneNumber))
+          del syncContacts.contacts[subIndex]
+          subIndex -= 1
+        subIndex += 1
+      index += 1
+
+    # Đưa danh bạ google đồng bộ vào danh bạ trong db
+    for gg in googleContacts :
+      if any(contact.phone_name == gg.phone_name for contact in syncContacts.contacts) :
+        for i in range(len(syncContacts.contacts)):
+          if syncContacts.contacts[i].phone_name == gg.phone_name:
+            for phoneNumber in gg.phone_numbers :
+              if phoneNumber not in syncContacts.contacts[i].phone_numbers :
+                syncContacts.contacts[i].phone_numbers.append((phoneNumber))
+            break
+      else :
+        syncContacts.contacts.append(gg)
+    
+    # Đưa danh bạ outlook đồng bộ vào danh bạ trong db
+    for ol in outlookContacts :
+      if any(contact.phone_name == ol.phone_name for contact in syncContacts.contacts) :
+        for i in range(len(syncContacts.contacts)):
+          if syncContacts.contacts[i].phone_name == ol.phone_name:
+            for phoneNumber in ol.phone_numbers :
+              if phoneNumber not in syncContacts.contacts[i].phone_numbers :
+                syncContacts.contacts[i].phone_numbers.append((phoneNumber))
+            break
+      else :
+        syncContacts.contacts.append(ol)
 
     syncContacts.sync_at = datetime.datetime.now()
 
@@ -43,5 +84,3 @@ class SyncContacts(Service):
     response.payload = {
       'success': True
     }
-
-    # Cần phải sửa lại phần này

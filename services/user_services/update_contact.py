@@ -9,13 +9,13 @@ from models import *
 from zato.server.service import Service, List
 
 
-class DeleteContact(Service):
+class UpdateContact(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      tạo mới một liên hệ trong danh bạ
+      sửa một liên hệ trong danh bạ
   """
 
   class SimpleIO:
-    input_required = 'accessToken', 'phoneName'
+    input_required = 'accessToken', 'oldPhoneName', 'newPhoneName', List('phoneNumbers')
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -53,21 +53,33 @@ class DeleteContact(Service):
     user = User.objects(user_id = userId)[0]
     contacts = user.sync_contacts.contacts
 
-    if not any(contact['phone_name'] == request['phoneName'] for contact in contacts):
+    if not any(contact['phone_name'] == request['oldPhoneName'] for contact in contacts):
       response.payload = {
         'success': False,
         'message': 'This contact does not exist',
+        'error': 'NOT_EXIST'
+      }
+      return
+
+    if request['newPhoneName'] != request['oldPhoneName'] and any(contact['phone_name'] == request['newPhoneName'] for contact in contacts):
+      response.payload = {
+        'success': False,
+        'message': 'Contact with this name already exists',
+        'error': 'NEW_PHONE_NAME_EXISTED'
       }
       return
 
     # self.logger.info(contacts)
     for i in range(len(contacts)):
-      if contacts[i]['phone_name'] == request['phoneName']:
-        del contacts[i]
-        break
+      if contacts[i]['phone_name'] == request['oldPhoneName']:
+        contact = contacts[i]
+
+    contact.phone_name = request['newPhoneName']
+    contact.phone_numbers = request['phoneNumbers']
     user.save()
 
     response.payload = {
       'success': True,
-      'message': 'Delete contact successfully',
+      'message': 'Update contact successfully',
     }
+    return
