@@ -22,7 +22,15 @@ class SyncContacts(Service):
     request = self.request.input
     response = self.response
 
-    userId = request['userId']
+    userId = request['userId']  
+
+    # Load contacts mới nhất từ google và outlook trước khi đồng bộ
+    self.invoke('google-schedule.google-schedule', {
+      'userId': userId
+    })
+    self.invoke('outlook-schedule.outlook-schedule', {
+      'userId': userId
+    })
 
     user = User.objects(user_id = userId)[0]
 
@@ -33,10 +41,6 @@ class SyncContacts(Service):
 
     if user.outlook.contacts is not None :
       outlookContacts = user.outlook.contacts
-
-    self.logger.info(len(syncContacts.contacts))
-    self.logger.info(len(googleContacts))
-    self.logger.info(len(outlookContacts))
 
     # Lọc các danh bạ trùng trên trong list danh bạ
     index = 0
