@@ -17,6 +17,12 @@ class SyncContactsSchedule(Service):
     self.logger.info('Goi lap lich dong bo danh ba tat ca nguoi dung')
     users = User.objects
     for user in users:
+      self.invoke('google-schedule.google-schedule', {
+        'userId': user.user_id
+      })
+      self.invoke('outlook-schedule.outlook-schedule', {
+        'userId': user.user_id
+      })
       self.invoke('sync-contacts.sync-contacts', {
         'userId': user.user_id
       })
