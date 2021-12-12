@@ -66,7 +66,8 @@ class SyncContacts(Service):
                 syncContacts.contacts[i].phone_numbers.append((phoneNumber))
             break
       else :
-        syncContacts.contacts.append(gg)
+        newContact = Contact(phone_name=gg.phone_name, phone_numbers=gg.phone_numbers)
+        syncContacts.contacts.append(newContact)
     
     # Đưa danh bạ outlook đồng bộ vào danh bạ trong db
     for ol in outlookContacts :
@@ -78,7 +79,8 @@ class SyncContacts(Service):
                 syncContacts.contacts[i].phone_numbers.append((phoneNumber))
             break
       else :
-        syncContacts.contacts.append(ol)
+        newContact = Contact(phone_name=ol.phone_name, phone_numbers=ol.phone_numbers)
+        syncContacts.contacts.append(newContact)
 
     syncContacts.sync_at = datetime.datetime.now()
 

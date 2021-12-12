@@ -171,11 +171,13 @@ class LoadGoogleContacts(Service):
   def saveContacts(self, dataContacts):
     contacts = []
     for item in dataContacts :
+      resourceName = item['resourceName']
+      etag = item['etag']
       phoneName = item['names'][0]['displayName']
       phoneNumbers = []
       for phoneNumber in item['phoneNumbers'] :
         phoneNumbers.append(phoneNumber['value'])
-      contact = Contact(phone_name=phoneName, phone_numbers=phoneNumbers)
+      contact = GoogleContact(resource_name=resourceName, etag=etag, phone_name=phoneName, phone_numbers=phoneNumbers)
       contacts.append(contact)
     
     return contacts

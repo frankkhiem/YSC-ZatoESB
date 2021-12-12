@@ -6,17 +6,28 @@ class Contact(EmbeddedDocument):
   phone_name = StringField(max_length=100)
   phone_numbers = ListField(StringField())
 
+class GoogleContact(EmbeddedDocument):
+  resource_name = StringField(max_length=100)
+  etag = StringField(max_length=100)
+  phone_name = StringField(max_length=100)
+  phone_numbers = ListField(StringField())
+
+class OutlookContact(EmbeddedDocument):
+  id = StringField(max_length=1000)
+  phone_name = StringField(max_length=100)
+  phone_numbers = ListField(StringField())
+
 class GoogleAccount(EmbeddedDocument):
   activated = BooleanField(required=True, default=False)
   access_token = StringField()
   refresh_token = StringField()
-  contacts = ListField(EmbeddedDocumentField(Contact))
+  contacts = ListField(EmbeddedDocumentField(GoogleContact))
 
 class OutlookAccount(EmbeddedDocument):
   activated = BooleanField(required=True, default=False)
   access_token = StringField()
   refresh_token = StringField()
-  contacts = ListField(EmbeddedDocumentField(Contact))
+  contacts = ListField(EmbeddedDocumentField(OutlookContact))
 
 class ZaloAccount(EmbeddedDocument):
   activated = BooleanField(required=True, default=False)

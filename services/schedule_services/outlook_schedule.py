@@ -151,13 +151,14 @@ class OutlookSchedule(Service):
   def saveContacts(self, dataContacts):
     contacts = []
     for item in dataContacts :
+      id = item['id']
       phoneName = item['displayName']
       phoneNumbers = []
       for phoneNumber in item['phones'] :
         phoneNumbers.append(phoneNumber['number'])
       # self.logger.info(phoneName)
       # self.logger.info(phoneNumbers)
-      contact = Contact(phone_name=phoneName, phone_numbers=phoneNumbers)
+      contact = OutlookContact(id=id, phone_name=phoneName, phone_numbers=phoneNumbers)
       contacts.append(contact)
 
     return contacts
