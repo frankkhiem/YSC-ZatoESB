@@ -9,13 +9,13 @@ from models import *
 from zato.server.service import Service, List
 
 
-class DeleteContact(Service):
+class DeleteMultipleContacts(Service):
   """ Nhận request gồm accessToken lấy user tương ứng, 
-      xóa 1 liên hệ trong danh bạ
+      xóa nhiều liên hệ trong danh bạ
   """
 
   class SimpleIO:
-    input_required = 'accessToken', 'phoneName'
+    input_required = 'accessToken', List('listPhoneNames')
 
   def handle(self):
     # Khai báo đối tượng request và response của service
@@ -53,21 +53,15 @@ class DeleteContact(Service):
     user = User.objects(user_id = userId)[0]
     contacts = user.sync_contacts.contacts
 
-    if not any(contact['phone_name'] == request['phoneName'] for contact in contacts):
-      response.payload = {
-        'success': False,
-        'message': 'This contact does not exist',
-      }
-      return
-
-    # self.logger.info(contacts)
-    for i in range(len(contacts)):
-      if contacts[i]['phone_name'] == request['phoneName']:
-        del contacts[i]
-        break
-    user.save()
+    for phoneName in request['listPhoneNames'] :
+      # self.logger.info(phoneName)
+      for i in range(len(contacts)):
+        if contacts[i]['phone_name'] == phoneName:
+          del contacts[i]
+          break
+      user.save()
 
     response.payload = {
       'success': True,
-      'message': 'Delete contact successfully',
+      'message': 'Delete multiple contacts successfully'
     }
