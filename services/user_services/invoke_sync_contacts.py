@@ -68,7 +68,7 @@ class InvokeSyncContacts(Service):
       for contact in syncContacts.contacts
     ]
 
-    userContacts.sort(key = lambda x: x['phoneName'])
+    userContacts.sort(key = lambda x: x['phoneName'].lower())
 
     vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
 

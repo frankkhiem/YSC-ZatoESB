@@ -63,7 +63,7 @@ class GetGoogleContacts(Service):
       for contact in googleAccount.contacts
     ]
 
-    googleContacts.sort(key = lambda x: x['phoneName'])
+    googleContacts.sort(key = lambda x: x['phoneName'].lower())
     
     response.payload = dumps(googleContacts)
     response.status_code = 200

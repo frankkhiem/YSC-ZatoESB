@@ -63,7 +63,7 @@ class GetOutlookContacts(Service):
       for contact in outlookAccount.contacts
     ]
 
-    outlookContacts.sort(key = lambda x: x['phoneName'])
+    outlookContacts.sort(key = lambda x: x['phoneName'].lower())
     
     response.payload = dumps(outlookContacts)
     response.status_code = 200
