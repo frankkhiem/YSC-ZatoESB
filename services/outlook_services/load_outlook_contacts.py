@@ -113,7 +113,7 @@ class LoadOutlookContacts(Service):
     load_contacts_conn = self.outgoing.plain_http['Load Outlook Contacts'].conn
 
     params = {
-      # Không có params
+      '$top': 1000
     }
     payload = {
       # Không có payload trong body

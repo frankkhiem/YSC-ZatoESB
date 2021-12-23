@@ -63,8 +63,11 @@ class LoadGoogleContacts(Service):
     res_load_contacts = self.loadContacts(googleAccount.access_token)
 
     if res_load_contacts['status_code'] == 200 :
-      listContacts =  res_load_contacts['data']['connections']
-      googleAccount.contacts = self.saveContacts(listContacts)
+      if res_load_contacts['data'] :
+        listContacts =  res_load_contacts['data']['connections']
+        googleAccount.contacts = self.saveContacts(listContacts)
+      else :
+        googleAccount.contacts = []
       user.save()
       response.payload = {
         'success': True,
@@ -78,8 +81,11 @@ class LoadGoogleContacts(Service):
       if result['status'] :
         googleAccount.access_token = result['access_token']       
         res_load_contacts = self.loadContacts(googleAccount.access_token)
-        listContacts = res_load_contacts['data']['connections']
-        googleAccount.contacts = self.saveContacts(listContacts)
+        if res_load_contacts['data'] :
+          listContacts =  res_load_contacts['data']['connections']
+          googleAccount.contacts = self.saveContacts(listContacts)
+        else :
+          googleAccount.contacts = []
         user.save()
         response.payload = {
           'success': True,
