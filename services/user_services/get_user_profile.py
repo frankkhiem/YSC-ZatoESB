@@ -61,7 +61,8 @@ class GetUserProfile(Service):
       'avatar': user['avatar'],
       'aboutMe': user['about_me'],
       'linkedGoogle': user['google']['activated'],
-      'linkedOutlook': user['outlook']['activated']
+      'linkedOutlook': user['outlook']['activated'],
+      'linkedZalo': user['zalo']['activated']
     }
 
     response.status_code = 200

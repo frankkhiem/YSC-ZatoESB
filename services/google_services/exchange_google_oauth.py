@@ -21,6 +21,10 @@ class ExchangeGoogleToken(Service):
     # Khai báo đối tượng request và response của service
     request = self.request.input
     response = self.response
+    # Set headers tránh lỗi CORS
+    response.headers = {
+      'Access-Control-Allow-Origin' : '*',
+    }
 
     ##############################################################################################
     # Mọi service cần xác thực người dùng và lấy thông tin của người đều cần các dòng trong vùng #
@@ -63,7 +67,7 @@ class ExchangeGoogleToken(Service):
       'code': authorization_code,
       'client_id': '301608552892-g7inqpodo0dkvlvkmnaqrmpgf8oi695d.apps.googleusercontent.com',
       'client_secret': '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',
-      'redirect_uri': 'http://localhost:3000/google-callback',
+      'redirect_uri': 'http://localhost:8080',
       'grant_type': 'authorization_code'
     }
     headers = {

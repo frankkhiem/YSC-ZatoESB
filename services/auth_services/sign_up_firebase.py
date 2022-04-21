@@ -75,6 +75,7 @@ class SignUpFirebase(Service):
     newUser.email = data['email']
     newUser.google = GoogleAccount()
     newUser.outlook = OutlookAccount()
+    newUser.zalo = ZaloAccount()
     newUser.sync_contacts = SyncContacts()
 
     newUser.save()

@@ -18,6 +18,13 @@ class OutlookAccount(EmbeddedDocument):
   refresh_token = StringField()
   contacts = ListField(EmbeddedDocumentField(Contact))
 
+class ZaloAccount(EmbeddedDocument):
+  activated = BooleanField(required=True, default=False)
+  access_token = StringField()
+  refresh_token = StringField()
+  account_name = StringField()
+  account_avatar = StringField()
+
 class SyncContacts(EmbeddedDocument):
   contacts = ListField(EmbeddedDocumentField(Contact))
   sync_at = DateTimeField()
@@ -31,6 +38,7 @@ class User(Document):
   about_me = StringField()
   google = EmbeddedDocumentField(GoogleAccount)
   outlook = EmbeddedDocumentField(OutlookAccount)
+  zalo = EmbeddedDocumentField(ZaloAccount)
   sync_contacts = EmbeddedDocumentField(SyncContacts)
   
   meta = {

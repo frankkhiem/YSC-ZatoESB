@@ -39,22 +39,22 @@ class Login(Service):
 
     # Gửi request tới firebase đăng nhập tài khoản trả về res_login
     res_login = login_conn.post(self.cid, payload, params, headers=headers)
+    self.logger.info(res_login)
+    # if res_login.status_code == 200:
+    #   response.payload = {
+    #     'userId': res_login.data['localId'],
+    #     'accessToken': res_login.data['idToken']
+    #   }
+    #   response.status_code = 200
 
-    if res_login.status_code == 200:
-      response.payload = {
-        'userId': res_login.data['localId'],
-        'accessToken': res_login.data['idToken']
-      }
-      response.status_code = 200
-
-    else:
-      response.payload = {
-        'message': res_login.data['error']['message']
-      }
-      response.status_code = res_login.status_code
+    # else:
+    #   response.payload = {
+    #     'message': res_login.data['error']['message']
+    #   }
+    #   response.status_code = res_login.status_code
     
-    response.headers = {
-      'Access-Control-Allow-Origin' : '*',
-    }
+    # response.headers = {
+    #   'Access-Control-Allow-Origin' : '*',
+    # }
 
     return
